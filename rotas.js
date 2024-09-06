@@ -3,6 +3,10 @@ const { funcaoRaiz } = require('./site-sql');
 // Inicializa o servidor e a conexão ao banco de dados
 const { app, connection } = funcaoRaiz();
 
+app.get('/', (req,res) => {
+  res.send('Somos Elechtech!');
+});
+
 // Define a rota GET para listar todos os registros de "abrirChamado"
 app.get('/chamados', (req, res) => {
   connection.query('SELECT * FROM abrirChamado', (err, rows) => {
@@ -86,4 +90,36 @@ app.post('/chamados', (req, res) => {
     // Retorna os resultados filtrados
     res.status(200).json(results);
   });
+});
+
+  // Atualizar informações de um chamado
+  app.put('/chamados/:id', (req, res) => { // Define uma rota PUT para atualizar um Chamado existente
+    const chamadoId = req.params.id; // Obtém o ID do Chamado a partir dos parâmetros da rota
+    const { setor, email, resolucao} = req.body; // Extrai os novos dados do Chamado do corpo da requisição
+    connection.query('UPDATE abrirChamado SET setor = ?, email = ?, resolucao = ? WHERE id = ?', 
+    [setor, email, resolucao, chamadoId], (err, result) => { // Executa uma consulta SQL para atualizar o Chamado
+      if (err) { // Verifica se houve erro ao atualizar o Chamado
+        console.error('Erro ao atualizar chamado', err); // Loga o erro no console
+        res.status(500).send('Erro interno do servidor'); // Envia uma resposta de erro 500
+        return; // Encerra a função para não continuar a execução
+      }
+      res.send('Chamado atualizado com sucesso'); // Envia uma resposta de sucesso se o Chamado foi atualizado
+    });
+});
+
+// Deletar um chamado
+app.delete('/chamados/:id', (req, res) => { // Define uma rota DELETE para excluir um chamado
+  const chamadoId = req.params.id; // Obtém o ID do chamado a partir dos parâmetros da rota
+  connection.query('DELETE FROM abrirChamado WHERE id = ?', [chamadoId], (err, result) => { // Executa uma consulta SQL para excluir o chamado
+    if (err) { // Verifica se houve erro ao deletar o chamado
+      console.error('Erro ao deletar chamado', err); // Loga o erro no console
+      res.status(500).send('Erro interno do servidor'); // Envia uma resposta de erro 500
+      return; // Encerra a função para não continuar a execução
+    }
+    res.send('Chamado deletado com sucesso'); // Envia uma resposta de sucesso se o chamado foi excluído
+  });
+});
+
+app.get('*', (req,res) => {
+  res.send('Página não encontrada!');
 });
