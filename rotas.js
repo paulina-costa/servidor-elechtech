@@ -35,49 +35,31 @@ app.get('/chamados/:id', (req, res) => { // Define uma rota GET para buscar um a
   });
 });
 
-// POST para filtrar chamados
-app.post('/chamados', (req, res) => { 
+app.post('/chamados', (req, res) => {
   const { datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, resolucao, FK_tecnicoResponsavelPeloChamado } = req.body;
 
+  // Cria um array de filtros
+  const filters = [
+    { field: 'datas', value: datas },
+    { field: 'setor', value: setor },
+    { field: 'tiposDoChamado', value: tiposDoChamado },
+    { field: 'nivelDeUrgencia', value: nivelDeUrgencia },
+    { field: 'nomeEquipamento', value: nomeEquipamento },
+    { field: 'resolucao', value: resolucao },
+    { field: 'FK_tecnicoResponsavelPeloChamado', value: FK_tecnicoResponsavelPeloChamado }
+  ];
+
   // Base da consulta SQL
-  let sql = 'SELECT * FROM abrirChamado WHERE 1=1';  // 1=1 é apenas um truque para facilitar a adição das condições
+  let sql = 'SELECT * FROM abrirChamado WHERE 1=1';
   const values = [];
 
-  // Verifica se cada campo foi passado e, caso sim, adiciona à consulta
-  if (datas) {
-    sql += ' AND datas = ?';
-    values.push(datas);
-  }
-
-  if (setor) {
-    sql += ' AND setor = ?';
-    values.push(setor);
-  }
-
-  if (tiposDoChamado) {
-    sql += ' AND tiposDoChamado = ?';
-    values.push(tiposDoChamado);
-  }
-
-  if (nivelDeUrgencia) {
-    sql += ' AND nivelDeUrgencia = ?';
-    values.push(nivelDeUrgencia);
-  }
-
-  if (nomeEquipamento) {
-    sql += ' AND nomeEquipamento = ?';
-    values.push(nomeEquipamento);
-  }
-
-  if (resolucao) {
-    sql += ' AND resolucao = ?';
-    values.push(resolucao);
-  }
-
-  if (FK_tecnicoResponsavelPeloChamado) {
-    sql += ' AND FK_tecnicoResponsavelPeloChamado = ?';
-    values.push(FK_tecnicoResponsavelPeloChamado);
-  }
+  // Adiciona filtros válidos à consulta SQL
+  filters.forEach(filter => {
+    if (filter.value) {
+      sql += ` AND ${filter.field} = ?`;
+      values.push(filter.value);
+    }
+  });
 
   // Executa a consulta SQL com os filtros aplicados
   connection.query(sql, values, (err, results) => {
@@ -91,6 +73,7 @@ app.post('/chamados', (req, res) => {
     res.status(200).json(results);
   });
 });
+
 
   // Atualizar informações de um chamado
   app.put('/chamados/:id', (req, res) => { // Define uma rota PUT para atualizar um Chamado existente
