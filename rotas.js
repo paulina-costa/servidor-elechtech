@@ -1,7 +1,9 @@
-const { funcaoRaiz } = require('./site-sql');
+const { funcaoServidor } = require('./servidor-sql');
+const { funcaoBDD } = require('./BDD-electech');
 
 // Inicializa o servidor e a conexão ao banco de dados
-const { app, connection } = funcaoRaiz();
+const { connection } = funcaoBDD();
+const { app } = funcaoServidor();
 
 app.get('/', (req,res) => {
   res.send('Somos Elechtech!');
@@ -36,7 +38,7 @@ app.get('/chamados/:id', (req, res) => { // Define uma rota GET para buscar um a
 });
 
 app.post('/chamados', (req, res) => {
-  const { datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, resolucao, FK_tecnicoResponsavelPeloChamado } = req.body;
+  const { datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, resolucao, FK_tecnicoResponsavelPeloChamado, orderByDate } = req.body;
 
   // Cria um array de filtros
   const filters = [
@@ -61,7 +63,14 @@ app.post('/chamados', (req, res) => {
     }
   });
 
-  // Executa a consulta SQL com os filtros aplicados
+  // Define a ordem de exibição por data (ascendente ou descendente)
+  if (orderByDate === 'asc') {
+    sql += ' ORDER BY datas ASC'; // Mais antiga para mais recente
+  } else if (orderByDate === 'desc') {
+    sql += ' ORDER BY datas DESC'; // Mais recente para mais antiga
+  }
+
+  // Executa a consulta SQL com os filtros e ordenação aplicados
   connection.query(sql, values, (err, results) => {
     if (err) {
       console.error('Erro ao buscar chamados:', err);
@@ -73,6 +82,7 @@ app.post('/chamados', (req, res) => {
     res.status(200).json(results);
   });
 });
+
 
 
   // Atualizar informações de um chamado
