@@ -1,19 +1,12 @@
-function funcaoServidor() {
-  const express = require('express'); // Importa o módulo Express
+const express = require('express');
+const app = express();
 
-  const app = express(); // Cria uma instância do Express
-  const port = 3000; // Define a porta
+app.use(express.json());  // Middleware para trabalhar com JSON
 
-  // Middleware para permitir que o Express interprete JSON
-  app.use(express.json());
+const PORT = process.env.PORT || 3000; // Define a porta que o servidor vai escutar
 
-  // Iniciar o servidor
-  app.listen(port, () => {
-    console.log(`Servidor rodando em http://localhost:${port}`);
-  });
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
 
-  // Retorne `app` e `connection` para serem usados em outros arquivos
-  return { app };
-}
-
-module.exports = { funcaoServidor };
+module.exports = { app };

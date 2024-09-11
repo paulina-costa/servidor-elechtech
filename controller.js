@@ -1,9 +1,5 @@
-const { funcaoServidor } = require('./servidor-sql');
-const { funcaoBDD } = require('./BDD-electech');
-
-// Inicializa o servidor e a conexão ao banco de dados
-const { connection } = funcaoBDD();
-const { app } = funcaoServidor();
+const { app } = require('./servidor-sql');
+const { connection } = require('./BDD-electech');
 
 app.get('/', (req,res) => {
   res.send('Somos Elechtech!');
