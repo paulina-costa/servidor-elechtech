@@ -6,37 +6,39 @@ app.get('/', (req,res) => {
 });
 
 // Define a rota GET para listar todos os registros de "abrirChamado"
-app.get('/chamados', (req, res) => {
+app.get('/filtros', (req, res) => {
   connection.query('SELECT * FROM abrirChamado', (err, rows) => {
     if (err) {
       console.error('Erro ao executar a consulta:', err);
       res.status(500).send('Erro interno do servidor');
       return;
     }
-    res.json(rows); // Envia os registros como resposta em formato JSON
+    res.json(rows);
   });
 });
 
-app.get('/chamados/:id', (req, res) => { // Define uma rota GET para buscar um aluno específico pelo ID
-  const alunoId = req.params.id; // Obtém o ID do aluno a partir dos parâmetros da rota
-  connection.query('SELECT * FROM abrirChamado WHERE id = ?', [alunoId], (err, rows) => { // Executa uma consulta SQL para buscar o aluno pelo ID
-    if (err) { // Verifica se houve erro ao executar a consulta
-      console.error('Erro ao executar a consulta:', err); // Loga o erro no console
-      res.status(500).send('Erro interno do servidor'); // Envia uma resposta de erro 500
-      return; // Encerra a função para não continuar a execução
+// Define a rota GET para listar o registro de "abrirChamado" com um ID específico
+app.get('/filtros/:id', (req, res) => { 
+  const alunoId = req.params.id; 
+  connection.query('SELECT * FROM abrirChamado WHERE id = ?', [alunoId], (err, rows) => {
+    if (err) { 
+      console.error('Erro ao executar a consulta:', err);
+      res.status(500).send('Erro interno do servidor'); 
+      return; 
     }
-    if (rows.length === 0) { // Verifica se o chamado foi encontrado (se a consulta retornou algum registro)
-      res.status(404).send('Chamado não encontrado'); // Envia uma resposta 404 (Não encontrado) se o aluno não existe
-      return; // Encerra a função para não continuar a execução
+    if (rows.length === 0) {
+      res.status(404).send('Chamado não encontrado');
+      return; 
     }
-    res.json(rows[0]); // Envia o primeiro (e único) registro encontrado como resposta em formato JSON
+    res.json(rows[0]); 
   });
 });
 
-app.post('/chamados', (req, res) => {
+// Define uma rota POST para filtrar as consultas
+app.post('/filtros', (req, res) => {
   const { datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, resolucao, FK_tecnicoResponsavelPeloChamado, orderByDate } = req.body;
 
-  // Cria um array de filtros
+  // Filtros
   const filters = [
     { field: 'datas', value: datas },
     { field: 'setor', value: setor },
@@ -47,7 +49,6 @@ app.post('/chamados', (req, res) => {
     { field: 'FK_tecnicoResponsavelPeloChamado', value: FK_tecnicoResponsavelPeloChamado }
   ];
 
-  // Base da consulta SQL
   let sql = 'SELECT * FROM abrirChamado WHERE 1=1';
   const values = [];
 
@@ -81,34 +82,35 @@ app.post('/chamados', (req, res) => {
 
 
 
-  // Atualizar informações de um chamado
-  app.put('/chamados/:id', (req, res) => { // Define uma rota PUT para atualizar um Chamado existente
-    const chamadoId = req.params.id; // Obtém o ID do Chamado a partir dos parâmetros da rota
-    const { setor, email, resolucao} = req.body; // Extrai os novos dados do Chamado do corpo da requisição
+// Atualizar informações de um chamado
+app.put('/filtros/:id', (req, res) => { 
+    const chamadoId = req.params.id; 
+    const { setor, email, resolucao} = req.body; 
     connection.query('UPDATE abrirChamado SET setor = ?, email = ?, resolucao = ? WHERE id = ?', 
-    [setor, email, resolucao, chamadoId], (err, result) => { // Executa uma consulta SQL para atualizar o Chamado
-      if (err) { // Verifica se houve erro ao atualizar o Chamado
-        console.error('Erro ao atualizar chamado', err); // Loga o erro no console
-        res.status(500).send('Erro interno do servidor'); // Envia uma resposta de erro 500
-        return; // Encerra a função para não continuar a execução
+    [setor, email, resolucao, chamadoId], (err, result) => { 
+      if (err) {
+        console.error('Erro ao atualizar chamado', err);
+        res.status(500).send('Erro interno do servidor'); 
+        return;
       }
-      res.send('Chamado atualizado com sucesso'); // Envia uma resposta de sucesso se o Chamado foi atualizado
+      res.send('Chamado atualizado com sucesso'); 
     });
 });
 
 // Deletar um chamado
-app.delete('/chamados/:id', (req, res) => { // Define uma rota DELETE para excluir um chamado
-  const chamadoId = req.params.id; // Obtém o ID do chamado a partir dos parâmetros da rota
-  connection.query('DELETE FROM abrirChamado WHERE id = ?', [chamadoId], (err, result) => { // Executa uma consulta SQL para excluir o chamado
-    if (err) { // Verifica se houve erro ao deletar o chamado
-      console.error('Erro ao deletar chamado', err); // Loga o erro no console
-      res.status(500).send('Erro interno do servidor'); // Envia uma resposta de erro 500
-      return; // Encerra a função para não continuar a execução
+app.delete('/filtros/:id', (req, res) => { 
+  const chamadoId = req.params.id; 
+  connection.query('DELETE FROM abrirChamado WHERE id = ?', [chamadoId], (err, result) => { 
+    if (err) { 
+      console.error('Erro ao deletar chamado', err); 
+      res.status(500).send('Erro interno do servidor'); 
+      return; 
     }
-    res.send('Chamado deletado com sucesso'); // Envia uma resposta de sucesso se o chamado foi excluído
+    res.send('Chamado deletado com sucesso'); 
   });
 });
 
+// Rota não existente
 app.get('*', (req,res) => {
   res.send('Página não encontrada!');
 });
