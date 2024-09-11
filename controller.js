@@ -2,7 +2,7 @@ const { app } = require('./servidor-sql');
 const { connection } = require('./BDD-electech');
 
 app.get('/', (req,res) => {
-  res.send('Somos Elechtech!');
+  res.status(200).send('Somos Elechtech!');
 });
 
 // Define a rota GET para listar todos os registros de "abrirChamado"
@@ -93,7 +93,7 @@ app.put('/filtros/:id', (req, res) => {
         res.status(500).send('Erro interno do servidor'); 
         return;
       }
-      res.send('Chamado atualizado com sucesso'); 
+      res.status(200).send('Chamado atualizado com sucesso'); 
     });
 });
 
@@ -106,11 +106,11 @@ app.delete('/filtros/:id', (req, res) => {
       res.status(500).send('Erro interno do servidor'); 
       return; 
     }
-    res.send('Chamado deletado com sucesso'); 
+    res.status(200).send('Chamado deletado com sucesso'); 
   });
 });
 
 // Rota não existente
 app.get('*', (req,res) => {
-  res.send('Página não encontrada!');
+  res.status(404).send('Página não encontrada!');
 });
