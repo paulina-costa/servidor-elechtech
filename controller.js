@@ -1,5 +1,5 @@
-const { app } = require('./servidor-sql');
-const { connection } = require('./BDD-electech');
+const { app } = require('./server');
+const { connection } = require('./bdConfig');
 const moment = require('moment');
 const validator = require('validator');
 
