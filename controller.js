@@ -52,7 +52,7 @@ app.post('/chamados', (req, res) => {
 
   // Verifica se a data está no formato correto
   if (!moment(datas, 'YYYY-MM-DD', true).isValid()) {
-    return res.status(400).json({ erro: 'Data inválida. Formato esperado: AAAA-MM-DD' });
+    return res.status(400).json({ erro: 'Data inválida. Formato esperado: YYYY-MM-DD' });
   }
 
   // Verifica o formato do email
@@ -82,7 +82,7 @@ app.post('/chamados', (req, res) => {
 
     // Se o e-mail já estiver cadastrado, retorna um erro
     if (results.length > 0) {
-      return res.status(400).json({ erro: 'Email já cadastrado' });
+      return res.status(409).json({ erro: 'Email já cadastrado' });
     }
 
     // Se o e-mail não existir, faz a inserção do novo chamado
