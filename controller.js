@@ -1,8 +1,10 @@
 const { app } = require('./servidor-sql');
 const { connection } = require('./BDD-electech');
+const moment = require('moment');
+const validator = require('validator');
 
-app.get('/', (req,res) => {
-  res.status(200).send('Somos Elechtech!');
+app.get('/', (req, res) => {
+  res.send('Somos Elechtech!');
 });
 
 // Define a rota GET para listar todos os registros de "abrirChamado"
@@ -18,21 +20,53 @@ app.get('/filtros', (req, res) => {
 });
 
 // Define a rota GET para listar o registro de "abrirChamado" com um ID específico
-app.get('/filtros/:id', (req, res) => { 
-  const alunoId = req.params.id; 
-  connection.query('SELECT * FROM abrirChamado WHERE id = ?', [alunoId], (err, rows) => {
-    if (err) { 
+app.get('/filtros/:id', (req, res) => {
+  const chamadoId = req.params.id;
+  connection.query('SELECT * FROM abrirChamado WHERE id = ?', [chamadoId], (err, rows) => {
+    if (err) {
       console.error('Erro ao executar a consulta:', err);
-      res.status(500).send('Erro interno do servidor'); 
-      return; 
+      res.status(500).send('Erro interno do servidor');
+      return;
     }
     if (rows.length === 0) {
       res.status(404).send('Chamado não encontrado');
-      return; 
+      return;
     }
-    res.json(rows[0]); 
+    res.json(rows[0]);
   });
 });
+
+// Define a rota POST para criar um novo chamado
+app.post('/chamados', (req, res) => {
+  const { datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao } = req.body;
+
+  // Validações básicas
+  if (!datas || !setor || !tiposDoChamado || !nivelDeUrgencia || !nomeEquipamento || !FK_tecnicoResponsavelPeloChamado || !email) {
+      return res.status(400).json({ erro: 'Todos os campos são obrigatórios.' });
+  }
+
+  // Adicione uma validação para a descrição, se necessário
+  if (!descricao) {
+      return res.status(400).json({ erro: 'Descrição é obrigatória.' });
+  }
+
+  const values = [datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao];
+
+  const sqlInsert = `
+      INSERT INTO abrirChamado (datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  connection.query(sqlInsert, values, (err, results) => {
+      if (err) {
+          console.error('Erro ao adicionar chamado:', err);
+          return res.status(500).send('Erro interno do servidor');
+      }
+
+      res.status(201).json({ message: 'Chamado adicionado com sucesso', chamadoId: results.insertId });
+  });
+});
+
 
 app.post('/filtros', (req, res) => {
   const { datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, resolucao, FK_tecnicoResponsavelPeloChamado, orderByDate } = req.body;
