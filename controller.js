@@ -34,13 +34,11 @@ app.get('/filtros/:id', (req, res) => {
   });
 });
 
-// Define uma rota POST para filtrar as consultas
 app.post('/filtros', (req, res) => {
   const { datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, resolucao, FK_tecnicoResponsavelPeloChamado, orderByDate } = req.body;
 
   // Filtros
   const filters = [
-    { field: 'datas', value: datas },
     { field: 'setor', value: setor },
     { field: 'tiposDoChamado', value: tiposDoChamado },
     { field: 'nivelDeUrgencia', value: nivelDeUrgencia },
@@ -60,11 +58,60 @@ app.post('/filtros', (req, res) => {
     }
   });
 
+  // Função para verificar se uma string é uma data válida
+  function isValidDate(d) {
+    return d instanceof Date && !isNaN(d);
+  }
+
+  // Filtragem por datas
+  if (datas) {
+    const currentDate = new Date();
+    let dateFilter;
+
+    switch (datas) {
+      case '7dias':
+        dateFilter = new Date(currentDate.setDate(currentDate.getDate() - 7));
+        break;
+      case '1mes':
+        dateFilter = new Date(currentDate.setMonth(currentDate.getMonth() - 1));
+        break;
+      case '3meses':
+        dateFilter = new Date(currentDate.setMonth(currentDate.getMonth() - 3));
+        break;
+      case '6meses':
+        dateFilter = new Date(currentDate.setMonth(currentDate.getMonth() - 6));
+        break;
+      case '1ano':
+        dateFilter = new Date(currentDate.setFullYear(currentDate.getFullYear() - 1));
+        break;
+      default:
+        // Se o valor de `datas` não corresponder a nenhum dos casos esperados
+        return res.status(400).json({
+          message: 'Filtro de datas inválido. Use "7dias", "1mes", "3meses", "6meses" ou "1ano".'
+        });
+    }
+
+    if (dateFilter && isValidDate(dateFilter)) {
+      sql += ` AND datas >= ?`;
+      values.push(dateFilter);
+    } else {
+      return res.status(400).json({
+        message: 'Data inválida fornecida.'
+      });
+    }
+  }
+
   // Define a ordem de exibição por data (ascendente ou descendente)
-  if (orderByDate === 'asc') {
-    sql += ' ORDER BY datas ASC'; // Mais antiga para mais recente
-  } else if (orderByDate === 'desc') {
-    sql += ' ORDER BY datas DESC'; // Mais recente para mais antiga
+  if (orderByDate) {
+    if (orderByDate === 'asc') {
+      sql += ' ORDER BY datas ASC'; // Mais antiga para mais recente
+    } else if (orderByDate === 'desc') {
+      sql += ' ORDER BY datas DESC'; // Mais recente para mais antiga
+    } else {
+      return res.status(400).json({
+        message: 'Ordem de data inválida. Use "asc" ou "desc".'
+      });
+    }
   }
 
   // Executa a consulta SQL com os filtros e ordenação aplicados
@@ -76,10 +123,12 @@ app.post('/filtros', (req, res) => {
     }
 
     // Retorna os resultados filtrados
-    res.status(200).json(results);
+    res.status(200).json({
+      message: 'Consulta realizada com sucesso',
+      data: results
+    });
   });
 });
-
 
 
 // Atualizar informações de um chamado
