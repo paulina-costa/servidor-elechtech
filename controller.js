@@ -1,5 +1,5 @@
-const { app } = require('./servidor-sql');
-const { connection } = require('./BDD-electech');
+const { app } = require('./server');
+const { connection } = require('./bdConfig');
 const moment = require('moment');
 const validator = require('validator');
 
@@ -50,20 +50,58 @@ app.post('/chamados', (req, res) => {
       return res.status(400).json({ erro: 'Descrição é obrigatória.' });
   }
 
-  const values = [datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao];
+  // Verifica se a data está no formato correto
+  if (!moment(datas, 'YYYY-MM-DD', true).isValid()) {
+    return res.status(400).json({ erro: 'Data inválida. Formato esperado: AAAA-MM-DD' });
+  }
 
-  const sqlInsert = `
+  // Verifica o formato do email
+  if (!validator.isEmail(email)) {
+    return res.status(400).json({ erro: 'E-mail inválido' });
+  }
+
+  // Valida o setor
+  const setoresValidos = ['Sala 2', 'Sala 5', 'Pátio', 'Secretaria'];
+  if (!setoresValidos.includes(setor)) {
+    return res.status(400).json({ erro: 'Setor inválido' });
+  }
+
+  // Verifica o nível de urgência
+  const niveisValidos = ['Crítico', 'Alto', 'Médio', 'Baixo'];
+  if (!niveisValidos.includes(nivelDeUrgencia)) {
+    return res.status(400).json({ erro: 'Nível de urgência inválido' });
+  }
+
+  // Verifica se o email já existe no banco de dados
+  const sqlCheckEmail = 'SELECT * FROM abrirChamado WHERE email = ?';
+  connection.query(sqlCheckEmail, [email], (err, results) => {
+    if (err) {
+      console.error('Erro ao verificar o email:', err);
+      return res.status(500).send('Erro interno do servidor');
+    }
+
+    // Se o e-mail já estiver cadastrado, retorna um erro
+    if (results.length > 0) {
+      return res.status(400).json({ erro: 'Email já cadastrado' });
+    }
+
+    // Se o e-mail não existir, faz a inserção do novo chamado
+    const sqlInsert = `
       INSERT INTO abrirChamado (datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+    `;
 
-  connection.query(sqlInsert, values, (err, results) => {
+    const values = [datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao];
+
+    connection.query(sqlInsert, values, (err, results) => {
       if (err) {
-          console.error('Erro ao adicionar chamado:', err);
-          return res.status(500).send('Erro interno do servidor');
+        console.error('Erro ao adicionar chamado:', err);
+        return res.status(500).send('Erro interno do servidor');
       }
 
+      // Retorno do ID do chamado inserido
       res.status(201).json({ message: 'Chamado adicionado com sucesso', chamadoId: results.insertId });
+    });
   });
 });
 
