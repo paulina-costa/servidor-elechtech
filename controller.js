@@ -205,31 +205,72 @@ app.post('/filtros', (req, res) => {
 
 // Atualizar informações de um chamado
 app.put('/filtros/:id', (req, res) => { 
-    const chamadoId = req.params.id; 
-    const { setor, email, resolucao} = req.body; 
-    connection.query('UPDATE abrirChamado SET setor = ?, email = ?, resolucao = ? WHERE id = ?', 
-    [setor, email, resolucao, chamadoId], (err, result) => { 
+  const chamadoId = req.params.id; 
+  const { setor, email, nomeEquipamento } = req.body; 
+
+  // Primeiro, verifica se o chamado existe
+  const sqlCheckIfExists = 'SELECT * FROM abrirChamado WHERE id = ?';
+  connection.query(sqlCheckIfExists, [chamadoId], (err, results) => {
       if (err) {
-        console.error('Erro ao atualizar chamado', err);
-        res.status(500).send('Erro interno do servidor'); 
-        return;
+          console.error('Erro ao verificar a existência do chamado:', err);
+          res.status(500).send('Erro interno do servidor');
+          return;
       }
-      res.status(200).send('Chamado atualizado com sucesso'); 
-    });
+
+      // Se o chamado não existir, retorna um erro 404
+      if (results.length === 0) {
+          return res.status(404).json({ message: 'Chamado não encontrado.' });
+      }
+
+      // Se o chamado existir, faz a atualização
+      const sqlUpdate = 'UPDATE abrirChamado SET setor = ?, email = ?, nomeEquipamento = ? WHERE id = ?';
+      connection.query(sqlUpdate, [setor, email, nomeEquipamento, chamadoId], (err, result) => {
+          if (err) {
+              console.error('Erro ao atualizar chamado', err);
+              res.status(500).send('Erro interno do servidor');
+              return;
+          }
+
+          // Retorna sucesso após a atualização
+          res.status(200).send('Chamado atualizado com sucesso');
+      });
+  });
 });
+
 
 // Deletar um chamado
 app.delete('/filtros/:id', (req, res) => { 
   const chamadoId = req.params.id; 
-  connection.query('DELETE FROM abrirChamado WHERE id = ?', [chamadoId], (err, result) => { 
+
+  // Primeiro, verifica se o chamado existe
+  const sqlCheckIfExists = 'SELECT * FROM abrirChamado WHERE id = ?';
+  connection.query(sqlCheckIfExists, [chamadoId], (err, results) => { 
     if (err) { 
-      console.error('Erro ao deletar chamado', err); 
+      console.error('Erro ao verificar a existência do chamado:', err); 
       res.status(500).send('Erro interno do servidor'); 
       return; 
     }
-    res.status(200).send('Chamado deletado com sucesso'); 
+
+    // Se o chamado não existir, retorna um erro 404
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'Chamado não encontrado.' });
+    }
+
+    // Se o chamado existir, executa a exclusão
+    const sqlDelete = 'DELETE FROM abrirChamado WHERE id = ?';
+    connection.query(sqlDelete, [chamadoId], (err, result) => { 
+      if (err) { 
+        console.error('Erro ao deletar chamado', err); 
+        res.status(500).send('Erro interno do servidor'); 
+        return; 
+      }
+
+      // Retorna sucesso após a exclusão
+      res.status(200).send('Chamado deletado com sucesso'); 
+    });
   });
 });
+
 
 // Rota não existente
 app.get('*', (req,res) => {
