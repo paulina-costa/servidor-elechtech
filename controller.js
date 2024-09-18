@@ -1,4 +1,5 @@
 const express = require('express');
+
 const { connection } = require('./bdConfig');
 const {
   homeRoute,
@@ -19,6 +20,7 @@ app.use(express.json()); // Para fazer parsing de JSON no corpo da requisição
 app.get('/', homeRoute);
 
 app.get('/filtros', listarRegistros(connection));
+
 app.get('/filtros/:id', listarRegistroPorId(connection));
 
 app.post('/chamados', criarChamado(connection));
