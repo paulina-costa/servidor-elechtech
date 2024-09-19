@@ -38,15 +38,11 @@ const listarRegistroPorId = (connection) => (req, res) => {
 
 // Função para criar um novo chamado
 const criarChamado = (connection) => (req, res) => {
-  const { datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao } = req.body;
+  const { nomeUsuario,datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao } = req.body;
 
   // Validações básicas
-  if (!datas || !setor || !tiposDoChamado || !nivelDeUrgencia || !nomeEquipamento || !FK_tecnicoResponsavelPeloChamado || !email) {
+  if (!datas || !setor || !tiposDoChamado || !nivelDeUrgencia || !nomeEquipamento || !FK_tecnicoResponsavelPeloChamado || !email || !descricao) {
     return res.status(400).json({ erro: 'Todos os campos são obrigatórios.' });
-  }
-
-  if (!descricao) {
-    return res.status(400).json({ erro: 'Descrição é obrigatória.' });
   }
 
   if (!moment(datas, 'YYYY-MM-DD', true).isValid()) {
@@ -79,11 +75,11 @@ const criarChamado = (connection) => (req, res) => {
     }
 
     const sqlInsert = `
-      INSERT INTO abrirChamado (datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO abrirChamado (nomeUsuario, datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const values = [datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao];
+    const values = [nomeUsuario,datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao];
 
     connection.query(sqlInsert, values, (err, results) => {
       if (err) {
@@ -95,6 +91,8 @@ const criarChamado = (connection) => (req, res) => {
     });
   });
 };
+
+
 
 // Função para filtrar chamados
 const filtrarChamados = (connection) => (req, res) => {

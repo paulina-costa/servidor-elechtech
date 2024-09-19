@@ -1,4 +1,7 @@
 const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+
 
 const { connection } = require('./bdConfig');
 const {
@@ -14,6 +17,8 @@ const {
 
 const app = express();
 const port = 3000;
+app.use(cors());
+app.use(bodyParser.json());
 
 app.use(express.json()); // Para fazer parsing de JSON no corpo da requisição
 
@@ -38,3 +43,4 @@ app.listen(port, () => {
 });
 
 module.exports = { app };
+

@@ -1,9 +1,6 @@
 const express = require('express');
 const app = express();
-const cors = require('cors');
-app.use(cors());
-const mysql = require('mysql2');
-app.use(mysql());
+
 
 app.use(express.json());  // Middleware para trabalhar com JSON
 
