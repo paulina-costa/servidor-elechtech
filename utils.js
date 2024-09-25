@@ -96,7 +96,11 @@ const criarChamado = (connection) => (req, res) => {
 
 // Função para filtrar chamados
 const filtrarChamados = (connection) => (req, res) => {
-  const { datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, resolucao, FK_tecnicoResponsavelPeloChamado, orderByDate } = req.body;
+  // Ajustar os nomes para corresponder ao que está vindo do front-end
+  const { 'tipo-chamado': tiposDoChamado, 'nivel-urgencia': nivelDeUrgencia, setor, equipamento: nomeEquipamento } = req.body;
+  
+  // Outros parâmetros, como datas e FK_tecnicoResponsavelPeloChamado, permanecem como estão
+  const { datas, resolucao, FK_tecnicoResponsavelPeloChamado, orderByDate } = req.body;
 
   const filters = [
     { field: 'setor', value: setor },
@@ -117,6 +121,7 @@ const filtrarChamados = (connection) => (req, res) => {
     }
   });
 
+  // Lógica para filtrar pela data, se necessário
   function isValidDate(d) {
     return d instanceof Date && !isNaN(d);
   }
@@ -157,6 +162,7 @@ const filtrarChamados = (connection) => (req, res) => {
     }
   }
 
+  // Ordem pela data
   if (orderByDate) {
     if (orderByDate === 'asc') {
       sql += ' ORDER BY datas ASC';
@@ -182,6 +188,7 @@ const filtrarChamados = (connection) => (req, res) => {
     });
   });
 };
+
 
 // Função para atualizar um chamado
 const atualizarChamado = (connection) => (req, res) => {
