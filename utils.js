@@ -1,14 +1,6 @@
 // utils.js
 const moment = require('moment');
 const validator = require('validator');
-const {  abrirChamado,
-  chamadosID,
-  sqlCheckEmail,
-  sqlInsert,
-  sqlCheckIfExists,
-  sqlUpdate,
-  deletarExistente,
-  sqlDelete } = require('./queries');
 
 // Função para a rota '/'
 const homeRoute = (req, res) => {
@@ -17,28 +9,25 @@ const homeRoute = (req, res) => {
 
 // Função para listar todos os registros
 const listarRegistros = (connection) => (req, res) => {
-  connection.query(abrirChamado, (err, rows) => {
+  connection.query('SELECT * FROM abrirChamado', (err, rows) => {
     if (err) {
       console.error('Erro ao executar a consulta:', err);
-      res.status(500).send('Erro interno do servidor');
-      return;
+      return res.status(500).send('Erro interno do servidor');
     }
     res.json(rows);
   });
 };
 
-// Função para listar o registro com um ID específico
+// Função para listar um registro por ID
 const listarRegistroPorId = (connection) => (req, res) => {
   const chamadoId = req.params.id;
-  connection.query(chamadosID, [chamadoId], (err, rows) => {
+  connection.query('SELECT * FROM abrirChamado WHERE id = ?', [chamadoId], (err, rows) => {
     if (err) {
       console.error('Erro ao executar a consulta:', err);
-      res.status(500).send('Erro interno do servidor');
-      return;
+      return res.status(500).send('Erro interno do servidor');
     }
     if (rows.length === 0) {
-      res.status(404).send('Chamado não encontrado');
-      return;
+      return res.status(404).send('Chamado não encontrado');
     }
     res.json(rows[0]);
   });
@@ -46,15 +35,16 @@ const listarRegistroPorId = (connection) => (req, res) => {
 
 // Função para criar um novo chamado
 const criarChamado = (connection) => (req, res) => {
-  const { nomeUsuario, datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao } = req.body;
+  const {
+    nomeUsuario, datas, setor, tiposDoChamado,
+    nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado,
+    email, descricao
+  } = req.body;
 
-  // Validações básicas
-  if (!datas || !setor || !tiposDoChamado || !nivelDeUrgencia || !nomeEquipamento || !FK_tecnicoResponsavelPeloChamado || !email) {
+  // Validações
+  if (!nomeUsuario || !datas || !setor || !tiposDoChamado || !nivelDeUrgencia || 
+      !nomeEquipamento || !FK_tecnicoResponsavelPeloChamado || !email || !descricao) {
     return res.status(400).json({ erro: 'Todos os campos são obrigatórios.' });
-  }
-
-  if (!descricao) {
-    return res.status(400).json({ erro: 'Descrição é obrigatória.' });
   }
 
   if (!moment(datas, 'YYYY-MM-DD', true).isValid()) {
@@ -75,6 +65,7 @@ const criarChamado = (connection) => (req, res) => {
     return res.status(400).json({ erro: 'Nível de urgência inválido' });
   }
 
+  const sqlCheckEmail = 'SELECT * FROM abrirChamado WHERE email = ?';
   connection.query(sqlCheckEmail, [email], (err, results) => {
     if (err) {
       console.error('Erro ao verificar o email:', err);
@@ -85,7 +76,14 @@ const criarChamado = (connection) => (req, res) => {
       return res.status(409).json({ erro: 'Email já cadastrado' });
     }
 
-    const values = [nomeUsuario, datas, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao];
+    const sqlInsert = `
+      INSERT INTO abrirChamado (nomeUsuario, datas, setor, tiposDoChamado,
+      nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const values = [nomeUsuario, datas, setor, tiposDoChamado, nivelDeUrgencia,
+                    nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao];
 
     connection.query(sqlInsert, values, (err, results) => {
       if (err) {
@@ -100,10 +98,7 @@ const criarChamado = (connection) => (req, res) => {
 
 // Função para filtrar chamados
 const filtrarChamados = (connection) => (req, res) => {
-  // Ajustar os nomes para corresponder ao que está vindo do front-end
   const { 'tipo-chamado': tiposDoChamado, 'nivel-urgencia': nivelDeUrgencia, setor, equipamento: nomeEquipamento } = req.body;
-  
-  // Outros parâmetros, como datas e FK_tecnicoResponsavelPeloChamado, permanecem como estão
   const { datas, resolucao, FK_tecnicoResponsavelPeloChamado, orderByDate } = req.body;
 
   const filters = [
@@ -115,7 +110,6 @@ const filtrarChamados = (connection) => (req, res) => {
     { field: 'FK_tecnicoResponsavelPeloChamado', value: FK_tecnicoResponsavelPeloChamado }
   ];
 
-
   let sql = 'SELECT * FROM abrirChamado WHERE 1=1';
   const values = [];
 
@@ -126,7 +120,7 @@ const filtrarChamados = (connection) => (req, res) => {
     }
   });
 
-  // Lógica para filtrar pela data, se necessário
+  // Lógica para filtrar pela data
   function isValidDate(d) {
     return d instanceof Date && !isNaN(d);
   }
@@ -183,8 +177,7 @@ const filtrarChamados = (connection) => (req, res) => {
   connection.query(sql, values, (err, results) => {
     if (err) {
       console.error('Erro ao buscar chamados:', err);
-      res.status(500).send('Erro interno do servidor');
-      return;
+      return res.status(500).send('Erro interno do servidor');
     }
 
     res.status(200).json({
@@ -194,28 +187,27 @@ const filtrarChamados = (connection) => (req, res) => {
   });
 };
 
-
 // Função para atualizar um chamado
 const atualizarChamado = (connection) => (req, res) => {
   const chamadoId = req.params.id;
   const { setor, email, nomeEquipamento } = req.body;
 
+  const sqlCheckIfExists = 'SELECT * FROM abrirChamado WHERE id = ?';
   connection.query(sqlCheckIfExists, [chamadoId], (err, results) => {
     if (err) {
       console.error('Erro ao verificar a existência do chamado:', err);
-      res.status(500).send('Erro interno do servidor');
-      return;
+      return res.status(500).send('Erro interno do servidor');
     }
 
     if (results.length === 0) {
       return res.status(404).json({ message: 'Chamado não encontrado.' });
     }
 
+    const sqlUpdate = 'UPDATE abrirChamado SET setor = ?, email = ?, nomeEquipamento = ? WHERE id = ?';
     connection.query(sqlUpdate, [setor, email, nomeEquipamento, chamadoId], (err, result) => {
       if (err) {
         console.error('Erro ao atualizar chamado', err);
-        res.status(500).send('Erro interno do servidor');
-        return;
+        return res.status(500).send('Erro interno do servidor');
       }
 
       res.status(200).send('Chamado atualizado com sucesso');
@@ -227,22 +219,22 @@ const atualizarChamado = (connection) => (req, res) => {
 const deletarChamado = (connection) => (req, res) => {
   const chamadoId = req.params.id;
 
-  connection.query(deletarExistente, [chamadoId], (err, results) => {
+  const sqlCheckIfExists = 'SELECT * FROM abrirChamado WHERE id = ?';
+  connection.query(sqlCheckIfExists, [chamadoId], (err, results) => {
     if (err) {
       console.error('Erro ao verificar a existência do chamado:', err);
-      res.status(500).send('Erro interno do servidor');
-      return;
+      return res.status(500).send('Erro interno do servidor');
     }
 
     if (results.length === 0) {
       return res.status(404).json({ message: 'Chamado não encontrado.' });
     }
 
+    const sqlDelete = 'DELETE FROM abrirChamado WHERE id = ?';
     connection.query(sqlDelete, [chamadoId], (err, result) => {
       if (err) {
         console.error('Erro ao deletar chamado', err);
-        res.status(500).send('Erro interno do servidor');
-        return;
+        return res.status(500).send('Erro interno do servidor');
       }
 
       res.status(200).send('Chamado deletado com sucesso');
