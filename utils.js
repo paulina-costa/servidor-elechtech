@@ -42,7 +42,7 @@ const criarChamado = (connection) => (req, res) => {
   } = req.body;
 
   // Validações
-  if (!nomeUsuario || !datas || !setor || !tiposDoChamado || !nivelDeUrgencia || 
+  if (!datas || !setor || !tiposDoChamado || !nivelDeUrgencia || 
       !nomeEquipamento || !FK_tecnicoResponsavelPeloChamado || !email || !descricao) {
     return res.status(400).json({ erro: 'Todos os campos são obrigatórios.' });
   }
