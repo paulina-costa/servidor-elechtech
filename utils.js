@@ -65,17 +65,6 @@ const criarChamado = (connection) => (req, res) => {
     return res.status(400).json({ erro: 'Nível de urgência inválido' });
   }
 
-  const sqlCheckEmail = 'SELECT * FROM abrirChamado WHERE email = ?';
-  connection.query(sqlCheckEmail, [email], (err, results) => {
-    if (err) {
-      console.error('Erro ao verificar o email:', err);
-      return res.status(500).send('Erro interno do servidor');
-    }
-
-    if (results.length > 0) {
-      return res.status(409).json({ erro: 'Email já cadastrado' });
-    }
-
     const sqlInsert = `
       INSERT INTO abrirChamado (nomeUsuario, datas, setor, tiposDoChamado,
       nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado, email, descricao)
@@ -93,8 +82,7 @@ const criarChamado = (connection) => (req, res) => {
 
       res.status(201).json({ message: 'Chamado adicionado com sucesso', chamadoId: results.insertId });
     });
-  });
-};
+  };
 
 // Função para filtrar chamados
 const filtrarChamados = (connection) => (req, res) => {
