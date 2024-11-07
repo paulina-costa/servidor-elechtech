@@ -19,17 +19,25 @@ const listarRegistros = (connection) => (req, res) => {
 };
 
 // Função para listar um registro por ID
-const listarRegistroPorId = (connection) => (req, res) => {
-  const chamadoId = req.params.id;
-  connection.query('SELECT * FROM abrirChamado WHERE id = ?', [chamadoId], (err, rows) => {
-    if (err) {
-      console.error('Erro ao executar a consulta:', err);
-      return res.status(500).send('Erro interno do servidor');
-    }
-    if (rows.length === 0) {
-      return res.status(404).send('Chamado não encontrado');
-    }
-    res.json(rows[0]);
+// Função para listar um registro por ID
+const listarRegistroPorId = (connection) => async (req, res) => {
+  const { id } = req.params;
+
+  const sql = 'SELECT * FROM abrirChamado WHERE id = ?';
+
+  connection.query(sql, [id], (error, results) => {
+      if (error) {
+          console.error(error);
+          return res.status(500).json({ message: 'Erro ao buscar chamado.' });
+      }
+      if (results.length > 0) {
+          // Convertendo a data para o formato adequado antes de enviar para o front
+          const chamado = results[0];
+          chamado.datas = moment(chamado.datas).format('YYYY-MM-DD'); // Formata a data
+          return res.status(200).json(chamado);
+      } else {
+          return res.status(404).json({ message: 'Chamado não encontrado.' });
+      }
   });
 };
 
@@ -176,32 +184,40 @@ const filtrarChamados = (connection) => (req, res) => {
 };
 
 // Função para atualizar um chamado
-const atualizarChamado = (connection) => (req, res) => {
-  const chamadoId = req.params.id;
-  const { setor, email, nomeEquipamento } = req.body;
+// utils.js
+const atualizarChamado = (connection) => async (req, res) => {
+  const { id } = req.params;
+  const { tiposDoChamado, nivelDeUrgencia, email, setor, nomeUsuario, nomeEquipamento, datas, FK_tecnicoResponsavelPeloChamado, descricao } = req.body;
 
-  const sqlCheckIfExists = 'SELECT * FROM abrirChamado WHERE id = ?';
-  connection.query(sqlCheckIfExists, [chamadoId], (err, results) => {
-    if (err) {
-      console.error('Erro ao verificar a existência do chamado:', err);
-      return res.status(500).send('Erro interno do servidor');
-    }
+  const sql = `
+      UPDATE abrirChamado 
+      SET 
+          tiposDoChamado = ?, 
+          nivelDeUrgencia = ?, 
+          email = ?, 
+          setor = ?, 
+          nomeUsuario = ?, 
+          nomeEquipamento = ?, 
+          datas = ?, 
+          FK_tecnicoResponsavelPeloChamado = ?, 
+          descricao = ? 
+      WHERE id = ?`;
 
-    if (results.length === 0) {
-      return res.status(404).json({ message: 'Chamado não encontrado.' });
-    }
+  const values = [tiposDoChamado, nivelDeUrgencia, email, setor, nomeUsuario, nomeEquipamento, datas, FK_tecnicoResponsavelPeloChamado, descricao, id];
 
-    const sqlUpdate = 'UPDATE abrirChamado SET setor = ?, email = ?, nomeEquipamento = ? WHERE id = ?';
-    connection.query(sqlUpdate, [setor, email, nomeEquipamento, chamadoId], (err, result) => {
-      if (err) {
-        console.error('Erro ao atualizar chamado', err);
-        return res.status(500).send('Erro interno do servidor');
+  connection.query(sql, values, (error, results) => {
+      if (error) {
+          console.error(error);
+          return res.status(500).json({ message: 'Erro ao atualizar chamado.' });
       }
-
-      res.status(200).send('Chamado atualizado com sucesso');
-    });
+      if (results.affectedRows > 0) {
+          return res.status(200).json({ message: 'Chamado atualizado com sucesso!' });
+      } else {
+          return res.status(404).json({ message: 'Chamado não encontrado.' });
+      }
   });
 };
+
 
 // Função para deletar um chamado
 const deletarChamado = (connection) => (req, res) => {

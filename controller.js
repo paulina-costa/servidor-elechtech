@@ -1,8 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-
-
 const { connection } = require('./bdConfig');
 const {
   homeRoute,
@@ -19,14 +17,13 @@ const app = express();
 const port = 3000;
 app.use(cors());
 app.use(bodyParser.json());
-
 app.use(express.json()); // Para fazer parsing de JSON no corpo da requisição
 
 app.get('/', homeRoute);
 
 app.get('/filtros', listarRegistros(connection));
 
-app.get('/filtros/:id', listarRegistroPorId(connection));
+app.get('/filtros/:id', listarRegistroPorId(connection));  // Certifique-se de que o id da query está correto
 
 app.post('/chamados', criarChamado(connection));
 
@@ -43,4 +40,3 @@ app.listen(port, () => {
 });
 
 module.exports = { app };
-
