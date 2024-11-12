@@ -3,7 +3,7 @@ DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
 
 USE siteWeb;
 
--- A tabela “tecnicoResponsavel” mantém detalhes sobre cada técnico, como nome.
+-- A tabela “tecnicoResponsavel” mantém detalhes sobre cada técnico, como nome. 
 CREATE TABLE IF NOT EXISTS tecnicoResponsavel (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nome VARCHAR(255) NOT NULL
@@ -15,20 +15,20 @@ VALUES
 ('Rafael'),
 ('Paulina'),
 ('Isack'),
-('Fernando');
+('Danyel');
 
 -- A tabela “abrirChamado” armazena informações sobre os chamados de suporte abertos, incluindo o usuário que abriu o chamado, a data, o equipamento envolvido, o setor do equipamento, o status da resolução, e qual técnico está responsável pelo chamado.
 CREATE TABLE IF NOT EXISTS abrirChamado (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nomeUsuario VARCHAR(100),
     datas DATE NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL,
     descricao VARCHAR(300) NOT NULL,
     setor ENUM('Secretaria','Sala 2','Pátio','Sala 5') NOT NULL,
     tiposDoChamado ENUM('Substituição','Formatação','Manutenção','Outros') NOT NULL,
     nivelDeUrgencia ENUM('Crítico','Alto','Médio','Baixo') NOT NULL,
     nomeEquipamento ENUM('Computador','Mouse','Teclado','Alto-falante','Estabilizador') NOT NULL,
-    resolucao ENUM('Não concluído','Em andamento','Concluído','Técnico à ser definido') DEFAULT 'Técnico à ser definido',
+    resolucao VARCHAR(50) DEFAULT 'Em andamento',
     FK_tecnicoResponsavelPeloChamado INT,
     FOREIGN KEY (FK_tecnicoResponsavelPeloChamado) REFERENCES tecnicoResponsavel(id)
 ) DEFAULT CHARSET = utf8;
@@ -37,11 +37,11 @@ CREATE TABLE IF NOT EXISTS abrirChamado (
 INSERT INTO abrirChamado (nomeUsuario, datas, email, descricao, setor, tiposDoChamado, nivelDeUrgencia, nomeEquipamento, FK_tecnicoResponsavelPeloChamado)
 VALUES
 ('João Silva', '2024-06-16', 'joao@example.com', 'Computador lento', 'Secretaria', 'Manutenção', 'Médio', 'Computador', 1),
-('Maria Santos', '2024-06-17', 'maria3@example.com', 'Problemas com mouse', 'Sala 2', 'Manutenção', 'Baixo', 'Mouse', 2),
-('Carlos Oliveira', '2024-06-18', 'carlos2@example.com', 'Problemas de rede', 'Pátio', 'Manutenção', 'Alto', 'Estabilizador', 3),
+('Maria Santos', '2024-06-17', 'maria@example.com', 'Problemas com mouse', 'Sala 2', 'Manutenção', 'Baixo', 'Mouse', 2),
+('Carlos Oliveira', '2024-06-18', 'carlos@example.com', 'Problemas de rede', 'Pátio', 'Manutenção', 'Alto', 'Estabilizador', 3),
 ('Ana Souza', '2024-06-19', 'ana@example.com', 'Formatação necessária', 'Sala 5', 'Formatação', 'Médio', 'Computador', 4),
 ('Pedro Lima', '2024-06-20', 'pedro@example.com', 'Problemas com teclado', 'Secretaria', 'Manutenção', 'Baixo', 'Teclado', 1),
-('Mariana Santos', '2024-06-21', 'mariana1@example.com', 'Alto-falante com ruídos', 'Sala 2', 'Manutenção', 'Alto', 'Alto-falante', 2),
+('Mariana Santos', '2024-06-21', 'mariana@example.com', 'Alto-falante com ruídos', 'Sala 2', 'Manutenção', 'Alto', 'Alto-falante', 2),
 ('Paulo Oliveira', '2024-06-22', 'paulo@example.com', 'Computador travando', 'Pátio', 'Substituição', 'Crítico', 'Computador', 3),
 ('Beatriz Silva', '2024-06-23', 'beatriz@example.com', 'Problemas com mouse', 'Secretaria', 'Manutenção', 'Médio', 'Mouse', 4),
 ('Fernanda Costa', '2024-06-24', 'fernanda@example.com', 'Teclado com teclas falhando', 'Sala 5', 'Manutenção', 'Alto', 'Teclado', 1),
@@ -57,8 +57,26 @@ INSERT INTO abrirChamado (nomeUsuario, datas, email, descricao, setor, tiposDoCh
 VALUES ('José Oliveira', '2024-06-16', 'jose@example.com', 'Computador não liga', 'Secretaria', 'Substituição', 'Crítico', 'Computador', 'Não Concluído', 1),
 ('Maria da Silva', '2024-06-17', 'maria@example.com', 'Problemas com teclado', 'Sala 2', 'Manutenção', 'Médio', 'Teclado', 'Concluído', 2),
 ('Carlos Ferreira', '2024-06-18', 'carlos@example.com', 'Problemas de rede', 'Pátio', 'Manutenção', 'Alto', 'Estabilizador', 'Não Concluído', 3),
-('Ana Paula', '2024-06-19', 'ana6@example.com', 'Computador lento', 'Sala 5', 'Manutenção', 'Baixo', 'Computador', 'Concluído', 4),
+('Ana Paula', '2024-06-19', 'ana@example.com', 'Computador lento', 'Sala 5', 'Manutenção', 'Baixo', 'Computador', 'Concluído', 4),
 ('Mariana Santos', '2024-06-20', 'mariana@example.com', 'Alto-falante com ruídos', 'Secretaria', 'Manutenção', 'Médio', 'Alto-falante', 'Concluído', 1);
+
+-- Tabela de usuários mantém o nome, email e senha do usuário
+CREATE TABLE IF NOT EXISTS usuario(
+	id INT PRIMARY KEY AUTO_INCREMENT,
+    nomeUsuario VARCHAR(100) not null,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) not null
+);
+
+INSERT INTO usuario (nomeUsuario, email, password) 
+VALUES('Paulina Vitória', 'paulina.costa.tecnico@gmail.com', '123456789');
+
+SELECT * FROM usuario;
+
+ SELECT abrirChamado.*, tecnicoResponsavel.nome AS nomeTecnicoResponsavel
+  FROM abrirChamado
+  JOIN tecnicoResponsavel ON abrirChamado.FK_tecnicoResponsavelPeloChamado = tecnicoResponsavel.id
+  WHERE 1=1;
 
 -- Selecionar os chamados com os nomes dos técnicos responsáveis:
 SELECT ac.id, ac.nomeUsuario, ac.descricao, ac.setor, ac.nivelDeUrgencia, ac.nomeEquipamento, ac.resolucao, tr.nome AS tecnicoResponsavel
@@ -159,8 +177,8 @@ SELECT * FROM abrirChamado WHERE tiposDoChamado = 'Manutenção';
 -- Selecionar os chamados ordenados por data atual decrescente:
 SELECT * FROM abrirChamado ORDER BY datas DESC;
 
--- Selecionar os chamados com nível de urgência "Alto" e que ainda não foram resolvidos ('Técnico à ser definido'):
-SELECT * FROM abrirChamado WHERE nivelDeUrgencia = 'Alto' AND resolucao = 'Técnico à ser definido';
+-- Selecionar os chamados com nível de urgência "Alto" e que ainda não foram resolvidos (resolução = 'Em andamento'):
+SELECT * FROM abrirChamado WHERE nivelDeUrgencia = 'Alto' AND resolucao = 'Em andamento';
 
 -- Contar quantos chamados estão atribuídos ao setor "Sala 2":
 SELECT COUNT(*) AS QTD_Chamados_Sala_2 FROM abrirChamado WHERE setor = 'Sala 2';
@@ -174,7 +192,7 @@ SELECT * FROM abrirChamado WHERE datas = CURDATE();
 SELECT * FROM abrirChamado WHERE email = 'joao@example.com';
 UPDATE abrirChamado SET resolucao = 'Concluído' WHERE email = 'joao@example.com';
 
--- Atualização no campo de resolução na tabela de chamados que tem como responsável pelo o chamado o email 'ana@example.com' e pertença a sala 5
+-- Atualização no campo de resolução na tabela de chamados que tem como responsável pelo o chamado o email 'ana@example.com' e pertença a sala 5 
 SELECT * FROM abrirChamado WHERE email = 'ana@example.com' AND setor = 'Sala 5';
 UPDATE abrirChamado SET resolucao = 'Concluído' WHERE email = 'ana@example.com' AND setor = 'Sala 5';
 

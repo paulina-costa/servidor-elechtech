@@ -1,6 +1,7 @@
 // utils.js
 const moment = require('moment');
 const validator = require('validator');
+const { connection } = require('./bdConfig');
 
 // Função para a rota '/'
 const homeRoute = (req, res) => {
