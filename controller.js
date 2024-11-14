@@ -2,6 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken');
+
 const { connection } = require('./bdConfig');
 const {
   homeRoute,
@@ -79,6 +81,34 @@ app.post('/cadastro', (req, res) => {
         });
       });
     });
+  });
+});
+
+app.post('/login', (req, res) => {
+  const { email, senha } = req.body;
+
+  // Consulta o banco para verificar o usuário
+  const query = 'SELECT * FROM usuario WHERE email = ?';
+  connection.query(query, [email], async (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro interno no servidor' });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ error: 'Usuário ou senha incorretos' });
+    }
+
+    const usuario = results[0];
+
+    // Comparação da senha
+    const senhaCorreta = await bcrypt.compare(senha, usuario.password);
+    if (!senhaCorreta) {
+      return res.status(401).json({ error: 'Usuário ou senha incorretos' });
+    }
+
+    // Geração do token
+    const token = jwt.sign({ id: usuario.id }, 'chave_secreta', { expiresIn: '1h' });
+    res.status(200).json({ message: 'Login realizado com sucesso!', token });
   });
 });
 
