@@ -36,14 +36,6 @@ app.post('/filtros', filtrarChamados(connection));
 app.post('/cadastro', (req, res) => {
   const { email, nomeUsuario, password } = req.body;
 
-  // Validação da senha (agora exigindo uma letra maiúscula)
-  const senhaRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^.&*()_+])[A-Za-z\d!@#$%^.&*()_+]{8,}$/;
-  if (!senhaRegex.test(password)) {
-    return res.status(400).json({
-      error: 'A senha deve ter no mínimo 8 caracteres, incluindo uma letra maiúscula, um número e um caractere especial.',
-    });
-  }
-
   // Verifica se o nome de usuário já existe
   const queryUsuario = 'SELECT * FROM usuario WHERE nomeUsuario = ?';
   connection.query(queryUsuario, [nomeUsuario], (err, results) => {
