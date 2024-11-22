@@ -134,15 +134,92 @@ const criarChamado = (connection) => (req, res) => {
 
 // Função para filtrar chamados
 const filtrarChamados = (connection) => (req, res) => {
-  const { filtro } = req.body;
+  const { 'tipo-chamado': tiposDoChamado, 'nivel-urgencia': nivelDeUrgencia, setor, equipamento: nomeEquipamento } = req.body;
+  const { datas, resolucao, FK_tecnicoResponsavelPeloChamado, orderByDate } = req.body;
 
-  const sqlFilter = 'SELECT * FROM abrirChamado WHERE setor = ?';
-  connection.query(sqlFilter, [filtro], (err, rows) => {
+  const filters = [
+    { field: 'setor', value: setor },
+    { field: 'tiposDoChamado', value: tiposDoChamado },
+    { field: 'nivelDeUrgencia', value: nivelDeUrgencia },
+    { field: 'nomeEquipamento', value: nomeEquipamento },
+    { field: 'resolucao', value: resolucao },
+    { field: 'FK_tecnicoResponsavelPeloChamado', value: FK_tecnicoResponsavelPeloChamado }
+  ];
+
+  let sql = 'SELECT * FROM abrirChamado WHERE 1=1';
+  const values = [];
+
+  filters.forEach(filter => {
+    if (filter.value) {
+      sql += ` AND ${filter.field} = ?`;
+      values.push(filter.value);
+    }
+  });
+
+  // Lógica para filtrar pela data
+  function isValidDate(d) {
+    return d instanceof Date && !isNaN(d);
+  }
+
+  if (datas) {
+    const currentDate = new Date();
+    let dateFilter;
+
+    switch (datas) {
+      case '7dias':
+        dateFilter = new Date(currentDate.setDate(currentDate.getDate() - 7));
+        break;
+      case '1mes':
+        dateFilter = new Date(currentDate.setMonth(currentDate.getMonth() - 1));
+        break;
+      case '3meses':
+        dateFilter = new Date(currentDate.setMonth(currentDate.getMonth() - 3));
+        break;
+      case '6meses':
+        dateFilter = new Date(currentDate.setMonth(currentDate.getMonth() - 6));
+        break;
+      case '1ano':
+        dateFilter = new Date(currentDate.setFullYear(currentDate.getFullYear() - 1));
+        break;
+      default:
+        return res.status(400).json({
+          message: 'Filtro de datas inválido. Use "7dias", "1mes", "3meses", "6meses" ou "1ano".'
+        });
+    }
+
+    if (dateFilter && isValidDate(dateFilter)) {
+      sql += ` AND datas >= ?`;
+      values.push(dateFilter);
+    } else {
+      return res.status(400).json({
+        message: 'Data inválida fornecida.'
+      });
+    }
+  }
+
+  // Ordem pela data
+  if (orderByDate) {
+    if (orderByDate === 'asc') {
+      sql += ' ORDER BY datas ASC';
+    } else if (orderByDate === 'desc') {
+      sql += ' ORDER BY datas DESC';
+    } else {
+      return res.status(400).json({
+        message: 'Ordem de data inválida. Use "asc" ou "desc".'
+      });
+    }
+  }
+
+  connection.query(sql, values, (err, results) => {
     if (err) {
-      console.error('Erro ao filtrar chamados:', err);
+      console.error('Erro ao buscar chamados:', err);
       return res.status(500).send('Erro interno do servidor');
     }
-    res.json(rows);
+
+    res.status(200).json({
+      message: 'Consulta realizada com sucesso',
+      data: results
+    });
   });
 };
 
