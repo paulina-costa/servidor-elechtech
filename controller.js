@@ -64,10 +64,6 @@ app.post('/cadastro', (req, res) => {
       return res.status(500).json({ error: err.message });
     }
 
-    if (results.length > 0) {
-      return res.status(400).json({ error: 'Usuário já existe' });
-    }
-
     // Verifica se o e-mail já existe
     const queryEmail = 'SELECT * FROM usuario WHERE email = ?';
     connection.query(queryEmail, [email], (err, results) => {
