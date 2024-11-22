@@ -64,7 +64,7 @@ VALUES ('José Oliveira', '2024-06-16', 'jose@example.com', 'Computador não lig
 CREATE TABLE IF NOT EXISTS usuario(
 	id INT PRIMARY KEY AUTO_INCREMENT,
     nomeUsuario VARCHAR(100) not null,
-    email VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) unique,
     password VARCHAR(255) not null
 );
 
