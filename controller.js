@@ -53,45 +53,121 @@ async function verificarCredenciais(email, senha) {
   });
 }
 
-// Rota de cadastro
+// Rota para validar campos individuais
+app.post('/validarCampo', (req, res) => {
+  const { fieldName, value } = req.body;
+
+  if (fieldName === 'nomeUsuario') {
+      // Validação de "nome e sobrenome"
+      const nomeRegex = /^[a-zA-ZÀ-ÿ]+(\s+[a-zA-ZÀ-ÿ]+)+$/;
+      if (!nomeRegex.test(value.trim())) {
+          return res.status(400).json({
+              error: 'O nome deve conter pelo menos duas palavras (nome e sobrenome), sem números ou caracteres especiais.',
+          });
+      }
+  } else if (fieldName === 'email') {
+      // Validação de e-mail
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          return res.status(400).json({ error: 'E-mail inválido.' });
+      }
+
+      // Verifica se o e-mail já está cadastrado
+      const query = 'SELECT * FROM usuario WHERE email = ?';
+      connection.query(query, [value], (err, results) => {
+          if (err) {
+              return res.status(500).json({ error: 'Erro ao verificar e-mail no banco.' });
+          }
+
+          if (results.length > 0) {
+              return res.status(400).json({ error: 'E-mail já está em uso.' });
+          }
+
+          return res.json({ message: 'Campo válido.' });
+      });
+      return;
+  } else if (fieldName === 'password') {
+      // Validação de senha
+      if (!/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+.]).{8,}$/.test(value)) {
+          return res.status(400).json({
+              error: 'Senha deve ter ao menos 8 caracteres, uma letra maiúscula, um número e um caractere especial.',
+          });
+      }
+  } else {
+      return res.status(400).json({ error: 'Campo inválido.' });
+  }
+
+  res.json({ message: 'Campo válido.' });
+});
+
+// Rota para cadastro de usuário
 app.post('/cadastro', (req, res) => {
-  const { email, nomeUsuario, password } = req.body;
+  const { nomeUsuario, email, password } = req.body;
+
+  // Verificar campos obrigatórios
+  if (!nomeUsuario || !email || !password) {
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+  }
+
+  // Validação de "nome e sobrenome"
+  const nomeRegex = /^[a-zA-ZÀ-ÿ]+(\s+[a-zA-ZÀ-ÿ]+)+$/;
+  if (!nomeRegex.test(nomeUsuario.trim())) {
+      return res.status(400).json({
+          error: 'O nome deve conter pelo menos duas palavras (nome e sobrenome), sem números ou caracteres especiais.',
+      });
+  }
+
+  // Validação de e-mail
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'E-mail inválido.' });
+  }
+
+  // Validação de senha
+  const senhaRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+.]).{8,}$/;
+  if (!senhaRegex.test(password)) {
+      return res.status(400).json({
+          error: 'Senha deve ter ao menos 8 caracteres, uma letra maiúscula, um número e um caractere especial.',
+      });
+  }
 
   // Verifica se o nome de usuário já existe
   const queryUsuario = 'SELECT * FROM usuario WHERE nomeUsuario = ?';
   connection.query(queryUsuario, [nomeUsuario], (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-
-    // Verifica se o e-mail já existe
-    const queryEmail = 'SELECT * FROM usuario WHERE email = ?';
-    connection.query(queryEmail, [email], (err, results) => {
       if (err) {
-        return res.status(500).json({ error: err.message });
+          return res.status(500).json({ error: 'Erro ao verificar nome de usuário no banco.' });
       }
 
-      if (results.length > 0) {
-        return res.status(400).json({ error: 'E-mail já está em uso' });
-      }
-
-      // Hash da senha antes de salvar no banco
-      bcrypt.hash(password, 10, (err, hashedPassword) => {
-        if (err) return res.status(500).json({ error: err.message });
-
-        // Criação do novo usuário no banco de dados
-        const insertQuery = 'INSERT INTO usuario (email, nomeUsuario, password) VALUES (?, ?, ?)';
-        connection.query(insertQuery, [email, nomeUsuario, hashedPassword], (err, results) => {
+      // Verifica se o e-mail já existe
+      const queryEmail = 'SELECT * FROM usuario WHERE email = ?';
+      connection.query(queryEmail, [email], (err, results) => {
           if (err) {
-            return res.status(500).json({ error: err.message });
+              return res.status(500).json({ error: 'Erro ao verificar e-mail no banco.' });
           }
 
-          res.status(201).json({ message: 'Usuário criado com sucesso' });
-        });
+          if (results.length > 0) {
+              return res.status(400).json({ error: 'E-mail já está em uso.' });
+          }
+
+          // Hash da senha antes de salvar no banco
+          bcrypt.hash(password, 10, (err, hashedPassword) => {
+              if (err) {
+                  return res.status(500).json({ error: 'Erro ao gerar hash da senha.' });
+              }
+
+              // Insere o novo usuário no banco de dados
+              const insertQuery = 'INSERT INTO usuario (email, nomeUsuario, password) VALUES (?, ?, ?)';
+              connection.query(insertQuery, [email, nomeUsuario, hashedPassword], (err) => {
+                  if (err) {
+                      return res.status(500).json({ error: 'Erro ao salvar usuário no banco.' });
+                  }
+
+                  res.status(201).json({ message: 'Usuário criado com sucesso.' });
+              });
+          });
       });
-    });
   });
 });
+
 
 // Rota de login
 app.post('/login', async (req, res) => {
