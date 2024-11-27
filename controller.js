@@ -176,7 +176,11 @@ app.post('/login', async (req, res) => {
     const usuario = await verificarCredenciais(email, senha);
     if (usuario) {
       const token = gerarToken(usuario); // Gerar o token JWT
-      res.json({ token });
+      res.json({
+        token,                // Envia o token JWT
+        email: usuario.email, // Envia o e-mail do usuário
+        nomeUsuario: usuario.nomeUsuario // Envia o nome do usuário
+      });
     } else {
       res.status(401).json({ error: 'Credenciais inválidas' });
     }
@@ -184,6 +188,7 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Erro no servidor. Tente novamente mais tarde.' });
   }
 });
+
 
 app.get('/', homeRoute);
 app.get('/filtros', listarRegistros(connection));
