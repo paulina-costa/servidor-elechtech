@@ -69,7 +69,7 @@ app.post('/validarCampo', (req, res) => {
   } else if (fieldName === 'email') {
       // Validação de e-mail
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          return res.status(400).json({ error: 'E-mail inválido.' });
+          return res.status(400).json({ error: 'Por favor, insira um e-mail válido, ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤPor exemplo: User@example.com' });
       }
 
       // Verifica se o e-mail já está cadastrado
