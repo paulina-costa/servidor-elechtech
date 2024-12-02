@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { pool } = require('./bdConfig.js');
-
+require('dotenv').config();
 const app = express();
 app.use(bodyParser.json());
 

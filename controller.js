@@ -4,6 +4,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { connection } = require('./bdConfig');
 const bcrypt = require('bcrypt');
+require('dotenv').config();
 const {
   homeRoute,
   listarRegistros,

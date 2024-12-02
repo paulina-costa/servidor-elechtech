@@ -2,6 +2,7 @@ const moment = require('moment');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+require('dotenv').config();
 
 // Função para a rota '/'
 const homeRoute = (req, res) => {
@@ -42,7 +43,7 @@ const loginUsuario = (connection) => (req, res) => {
 
       // Gera o token JWT
       const payload = { id: user.id, nomeUsuario: user.nomeUsuario, email: user.email };
-      const token = jwt.sign(payload, 'secreta-chave-jwt', { expiresIn: '1h' });
+      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
       return res.status(200).json({ message: 'Login bem-sucedido.', token });
     });
@@ -276,7 +277,7 @@ const verificarToken = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, 'secreta-chave-jwt');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.usuario = decoded;
     next();
   } catch (err) {
