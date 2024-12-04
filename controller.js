@@ -183,7 +183,7 @@ app.post('/login', async (req, res) => {
         nomeUsuario: usuario.nomeUsuario // Envia o nome do usuário
       });
     } else {
-      res.status(401).json({ error: 'Credenciais inválidas' });
+      res.status(401).json({ error: 'ㅤㅤㅤㅤCredenciais inválidas' });
     }
   } catch (error) {
     res.status(500).json({ error: 'Erro no servidor. Tente novamente mais tarde.' });
