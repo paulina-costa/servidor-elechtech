@@ -173,11 +173,11 @@ app.post('/cadastro', (req, res) => {
 app.post('/login', async (req, res) => {
   const { email, senha } = req.body;
 
-  // Validação de e-mail
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({ error: 'E-mail inválido.' });
-  }
+// Validação de e-mail
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(email)) {
+  return res.status(400).json({ error: 'E-mail inválido.' });
+}
 
   try {
     const usuario = await verificarCredenciais(email, senha);
@@ -189,7 +189,7 @@ app.post('/login', async (req, res) => {
         nomeUsuario: usuario.nomeUsuario // Envia o nome do usuário
       });
     } else {
-      res.status(401).json({ error: 'Credenciais inválidas' });
+      res.status(401).json({ error: 'ㅤㅤㅤㅤCredenciais inválidas' });
     }
   } catch (error) {
     res.status(500).json({ error: 'Erro no servidor. Tente novamente mais tarde.' });
