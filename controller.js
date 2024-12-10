@@ -173,6 +173,13 @@ app.post('/cadastro', (req, res) => {
 // Rota de login
 app.post('/login', async (req, res) => {
   const { email, senha } = req.body;
+
+// Validação de e-mail
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(email)) {
+  return res.status(400).json({ error: 'E-mail inválido.' });
+}
+
   try {
     const usuario = await verificarCredenciais(email, senha);
     if (usuario) {
